@@ -3,7 +3,7 @@
 
 This is the codebase for my ICCAD'24 publication "Balor: HLS Source Code Evaluator Based on Custom Graphs and Hierarchical GNNs". Balor was designed to facilitate design space exploration for high-level synthesis, using graph neural networks to estimate the Quality of Results quickly and accurately.
 
-Our evaluate functions in run.py generate detailed reports on estimation error across the 6 metrics: LUTs, FFs, Latency, Clock Period, DSPs and BRAMs. A pre-generated sample report for will be available in this repo shortly.
+Our evaluate functions in run.py generate detailed reports on estimation error across the 6 metrics: LUTs, FFs, Latency, Clock Period, DSPs and BRAMs. The pre-generated sample report "db4hls_pretrained_report.pdf" is available with error statistics, scatter plots, error histograms and numerical cdfs.
 
 
 ### Using Balor
