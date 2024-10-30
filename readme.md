@@ -14,7 +14,7 @@ The run.py script allows easy execution of  Balor's graph compiler, as well as b
 
 "--download_dataset" downloads >37,000 db4hls designs pre-encoded and ready for training, and places them in "balorgnn/datasets/db4hls_download/"
 
-"--download_pretrain" downloads our model weights from epoch 580 of training, along with the validation and test results to allow our generalized scripts to select the correct model weights. These files are put in "balorgnn/outputs/model_weights/db4hls_pretrained/limerick/snake/0/" and "balorgnn/outputs/results/db4hls_pretrained/limerick/snake/0/" respectively. None of our open-sourced scripts actually read in these model weights, the evaluate functions directly reads the test set results, but these will be provided shortly.
+"--download_pretrained" downloads our model weights from epoch 580 of training, along with the validation and test results to allow our generalized scripts to select the correct model weights. These files are put in "balorgnn/outputs/model_weights/db4hls_pretrained/limerick/snake/0/" and "balorgnn/outputs/results/db4hls_pretrained/limerick/snake/0/" respectively. None of our open-sourced scripts actually read in these model weights, the evaluate functions directly reads the test set results, but these will be provided shortly.
 
 
 
