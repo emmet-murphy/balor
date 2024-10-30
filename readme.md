@@ -3,10 +3,20 @@
 
 This is the codebase for my ICCAD'24 publication "Balor: HLS Source Code Evaluator Based on Custom Graphs and Hierarchical GNNs". Balor was designed to facilitate design space exploration for high-level synthesis, using graph neural networks to estimate the Quality of Results quickly and accurately.
 
+Our evaluate functions in run.py generate detailed reports on estimation error across the 6 metrics: LUTs, FFs, Latency, Clock Period, DSPs and BRAMs. A pre-generated sample report for will be available in this repo shortly.
+
 
 ### Using Balor
 
-The run.py script allows easy execution of  Balor's graph compiler, as well as both training and inference for the GNN QoR estimator. All files needed to run each stage of the process will be available shortly [here](https://polybox.ethz.ch/index.php/s/IG0Zhi7ASMkZ12R), allowing you to immediately train a model locally, or use our pre-trained models. This is especially for those who do not wish to build our graph compiler locally.
+The run.py script allows easy execution of  Balor's graph compiler, as well as both training and inference for the GNN QoR estimator. All files needed to run each stage of the process are available [here](https://polybox.ethz.ch/index.php/s/IG0Zhi7ASMkZ12R), allowing you to immediately train a model locally, or use our pre-trained models. This is especially for those who do not wish to build our graph compiler locally. The script quickstart.py allows easy automatic download of these files to the correct locations.
+
+#### quickstart.py
+
+"--download_dataset" downloads >37,000 db4hls designs pre-encoded and ready for training, and places them in "balorgnn/datasets/db4hls_download/"
+
+"--download_pretrain" downloads our model weights from epoch 580 of training, along with the validation and test results to allow our generalized scripts to select the correct model weights. These files are put in "balorgnn/outputs/model_weights/db4hls_pretrained/limerick/snake/0/" and "balorgnn/outputs/results/db4hls_pretrained/limerick/snake/0/" respectively.
+
+
 
 ### Methodology
 

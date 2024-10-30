@@ -1,6 +1,8 @@
 import argparse
 import subprocess
 
+from reports.report import report_single
+
 def get_base_generate_command():
 
     generate_command = ["python", "balorgnn/balorgnn/generate/generate_dataset.py"]
@@ -24,12 +26,12 @@ def get_base_generate_command():
     return generate_command
 
 
-def train(dataset):
+def train(dataset, tail="limerick/"):
     train_command = ["python", "balorgnn/balorgnn/train/train.py"]
 
     # specify dataset directory
     train_command.append("--data_dir")
-    train_command.append(f"balorgnn/datasets/{dataset}/limerick/")
+    train_command.append(f"balorgnn/datasets/{dataset}/{tail}")
 
     # specify output directory
     train_command.append("--output_base_path")
@@ -50,9 +52,14 @@ def train(dataset):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--generate_db4hls', action='store_true', help='Convert 36,000 DB4HLS files to pytorch geometric files. Requires the graph compiler to be built, and the DB4HLS mysql server to be present.')
+    parser.add_argument('--generate_db4hls', action='store_true', help='Convert more than 37,000 DB4HLS files to pytorch geometric files. Requires the graph compiler to be built, and the DB4HLS mysql server to be present.')
 
-    parser.add_argument('--train_db4hls', action='store_true', help='Train the mode. Generate must be ran first.')
+    parser.add_argument('--train_db4hls', action='store_true', help='Train the model. Generate must be ran first.')
+
+    parser.add_argument('--train_db4hls_download', action='store_true', help='Train the model using the downloaded dataset.')
+
+    parser.add_argument('--evaluate_db4hls', action='store_true', help='View summary of best model from training. Runnable after at least 10 epochs of training')
+
 
     args = parser.parse_args()
 
@@ -74,4 +81,12 @@ if __name__ == "__main__":
     if args.train_db4hls:
         print("Training on DB4HLS dataset")
         train("db4hls")
+    
+    if args.train_db4hls_download:
+        print("Training on downloaded DB4HLS dataset")
+        train("db4hls_pytorchgeo_files", "")
+
+    if args.evaluate_db4hls:
+        print("Evaluating on DB4HLS dataset")
+        report_single("db4hls")
 
