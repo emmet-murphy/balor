@@ -46,3 +46,5 @@ The train/train.py script trains the GNN encoders and estimators, and performs i
 The "graph_compiler" folder contains all of the code for converting c++ code to graph representations, encoded the DOT graph description language from the Graphviz project. To compile it, you will need to first build [ROSE](https://github.com/rose-compiler/rose) [0.11.145.3](https://github.com/rose-compiler/rose/commit/102bc598b74b00a657510f763dabbfb18ed8bdb9) with [Boost](https://www.boost.org/) 1.67.0.
 
 Once built, the wrapper script run_graph_compiler.py allows quick use of the compiler without specifying individual settings.
+
+We are planning to provide a VM with the graph compiler pre-built for those who would like to experiment with it, and it will be available shortly.
