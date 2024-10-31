@@ -8,6 +8,7 @@ colorama
 contourpy
 cycler
 filelock
+fpdf
 fonttools
 frozenlist
 fsspec
@@ -34,6 +35,7 @@ scikit-learn
 scipy
 six
 sympy
+tabulate
 threadpoolctl
 tqdm
 typing_extensions
