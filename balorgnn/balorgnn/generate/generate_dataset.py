@@ -39,6 +39,7 @@ class KernelList(Enum):
     GOLD = 7
     SILVER = 8
     PLATINUM = 9
+    CRYSTAL = 10
 
 class GraphConfigNames(Enum):
     MAYO = 0
@@ -51,34 +52,44 @@ class GraphConfigNames(Enum):
 
 
 class DatasetGenerator():
-    def __init__(self, top_folder_name, graph_config_name, kernel_list, combine_vast):
+    def __init__(self, dataset_folder, graph_compiler, inputs_folder, output_folder, graph_config_name, kernel_list, combine_vast, all_vast_21, merlin_only, valid_only, no_regen):
         self.num_processes = 16
         
+        self.inputs_folder = inputs_folder
+
         self.combine_vast = combine_vast
+
+        self.all_vast_21 = all_vast_21
+
+        self.merlin_only = merlin_only
+        self.valid_only = valid_only
+
+        self.no_regen = no_regen
+        
 
         self.temp_dir = "tmp"
         os.makedirs(self.temp_dir, exist_ok=True)
 
         if graph_config_name == GraphConfigNames.MAYO:
-            graph_config = graphConf.GraphConfigMayo()
+            graph_config = graphConf.GraphConfigMayo(graph_compiler)
             graph_config_folder = "mayo"
         elif graph_config_name == GraphConfigNames.CAVAN:
-            graph_config = graphConf.GraphConfigCavan()
+            graph_config = graphConf.GraphConfigCavan(graph_compiler)
             graph_config_folder = "cavan"
         elif graph_config_name == GraphConfigNames.GALWAY:
-            graph_config = graphConf.GraphConfigGalway()
+            graph_config = graphConf.GraphConfigGalway(graph_compiler)
             graph_config_folder = "galway"
         elif graph_config_name == GraphConfigNames.LOUTH:
-            graph_config = graphConf.GraphConfigLouth()
+            graph_config = graphConf.GraphConfigLouth(graph_compiler)
             graph_config_folder = "louth"
         elif graph_config_name == GraphConfigNames.KERRY:
-            graph_config = graphConf.GraphConfigKerry()
+            graph_config = graphConf.GraphConfigKerry(graph_compiler)
             graph_config_folder = "kerry"
         elif graph_config_name == GraphConfigNames.CORK:
-            graph_config = graphConf.GraphConfigCork()
+            graph_config = graphConf.GraphConfigCork(graph_compiler)
             graph_config_folder = "cork"
         elif graph_config_name == GraphConfigNames.LIMERICK:
-            graph_config = graphConf.GraphConfigLimerick()
+            graph_config = graphConf.GraphConfigLimerick(graph_compiler)
             graph_config_folder = "limerick"
 
         self.invocation = graph_config.invocation
@@ -145,6 +156,18 @@ class DatasetGenerator():
 
             self.kernels[OutputConfigNames.VAST_CUSTOM_18].extend(platinum_kernel_list)
             # self.outputs[OutputConfigNames.VAST_18] = outputConf.OutputConfigVast().metrics
+            # self.outputs[OutputConfigNames.VAST_18] = outputConf.OutputConfigVast().metrics
+
+        if KernelList.CRYSTAL in kernel_list:
+            crystal_kernel_list = ["3mm", "atax_medium", "covariance", "fdtd_2d", "gemm_p", "gemver_medium", "jacobi_2d", "symm_opt", "trmm_opt", "syr2k"]
+
+            # self.kernels[OutputConfigNames.VAST_CUSTOM_18].extend(crystal_kernel_list)
+            # self.kernels[OutputConfigNames.VAST_CUSTOM_20].extend(crystal_kernel_list)
+            self.kernels[OutputConfigNames.VAST_CUSTOM_21].extend(crystal_kernel_list)
+
+            # self.outputs[OutputConfigNames.VAST_18] = outputConf.OutputConfigVast().metrics
+
+
 
         if combine_vast:
             self.outputs[OutputConfigNames.VAST_ALL] = outputConf.OutputConfigVast(join=True).metrics
@@ -164,7 +187,7 @@ class DatasetGenerator():
         self.output_length = len(self.all_outputs)
 
 
-        self.output_dir = f"../../datasets/{top_folder_name}/{graph_config_folder}/"
+        self.output_dir = f"{dataset_folder}/{output_folder}/{graph_config_folder}/"
         os.makedirs(self.output_dir, exist_ok=True)
 
     def generateData(self):
@@ -177,11 +200,14 @@ class DatasetGenerator():
 
 
                 print(f"Processing kernel: {kernel}, {kernel_num+1}/{len(self.kernels[output_config_name])}")
-                kernel_data = self.kernel_data(kernel)
                 
-                # if not (output_config_name == OutputConfigNames.VAST_CUSTOM_20 and kernel_num == 1):
-                #     base_data_id = base_data_id + kernel_data.get_num_values()
-                #     continue
+                kernel_data = self.kernel_data(kernel)
+
+                if(len(kernel_data.data) == 0):
+                    continue
+
+                if self.valid_only and self.is_vast_config:
+                    kernel_data.data = kernel_data.data[kernel_data.data["Valid"]]
 
                 a = time.time()
 
@@ -214,15 +240,15 @@ class DatasetGenerator():
         self.is_vast_config = False
         if output_config_name == OutputConfigNames.DB4HLS:
             self.output_config = outputConf.OutputConfigDB4HLS()
-            self.kernel_data = partial(KernelDataDB4HLS, base_path="../../machsuite")
+            self.kernel_data = partial(KernelDataDB4HLS, base_path=f"{self.inputs_folder}/machsuite")
             self.apply_directives = apply_vitis_directives
         if output_config_name == OutputConfigNames.ML4ACCEL:
             self.output_config = outputConf.OutputConfigML4ACCEL()
-            self.kernel_data = partial(KernelDataPolybench, base_path="../../polybench")
+            self.kernel_data = partial(KernelDataPolybench, base_path=f"{self.inputs_folder}/polybench")
             self.apply_directives = apply_vitis_directives
         if output_config_name == OutputConfigNames.POWERGEAR:
             self.output_config = outputConf.OutputConfigPowergear()
-            self.kernel_data = partial(KernelDataPowerGear, base_path="../../powergear")
+            self.kernel_data = partial(KernelDataPowerGear, base_path=f"{ self.inputs_folder}/powergear")
             self.apply_directives = apply_vitis_directives
 
         is_vast = output_config_name == OutputConfigNames.VAST_18
@@ -231,44 +257,47 @@ class DatasetGenerator():
         if is_vast:
             self.is_vast_config = True
             self.output_config = outputConf.OutputConfigVast()
-            self.kernel_data = partial(KernelDataVast, base_path="../../vast", output_config_name=output_config_name)
+            self.kernel_data = partial(KernelDataVast, base_path=f"{self.inputs_folder}/vast", output_config_name=output_config_name)
             self.apply_directives = apply_merlin_directives
 
         if output_config_name == OutputConfigNames.VAST_CUSTOM_18:
             self.output_config = outputConf.OutputConfigVast(join=True)
-            self.kernel_data = partial(KernelDataVastCustom, base_path="../../vast", output_config_name=OutputConfigNames.VAST_18)
+            self.kernel_data = partial(KernelDataVastCustom, base_path=f"{self.inputs_folder}/vast", output_config_name=OutputConfigNames.VAST_18)
             self.apply_directives = apply_merlin_directives
             self.output_config_name = OutputConfigNames.VAST_18
             self.is_vast_config = True
 
         if output_config_name == OutputConfigNames.VAST_CUSTOM_20:
             self.output_config = outputConf.OutputConfigVast(join=True)
-            self.kernel_data = partial(KernelDataVastCustom, base_path="../../vast", output_config_name=OutputConfigNames.VAST_20)
+            self.kernel_data = partial(KernelDataVastCustom, base_path=f"{self.inputs_folder}/vast", output_config_name=OutputConfigNames.VAST_20)
             self.apply_directives = apply_merlin_directives
             self.output_config_name = OutputConfigNames.VAST_20
             self.is_vast_config = True
 
         if output_config_name == OutputConfigNames.VAST_CUSTOM_21:
             self.output_config = outputConf.OutputConfigVast(join=True)
-            self.kernel_data = partial(KernelDataVastCustom, base_path="../../vast", output_config_name=OutputConfigNames.VAST_21)
+            self.kernel_data = partial(KernelDataVastCustom, base_path=f"{self.inputs_folder}/vast", output_config_name=OutputConfigNames.VAST_21)
             self.apply_directives = apply_merlin_directives
-            self.output_config_name = OutputConfigNames.VAST_21      
+            self.output_config_name = OutputConfigNames.VAST_21     
             self.is_vast_config = True  
 
 
         if output_config_name == OutputConfigNames.GNNDSE:
             self.output_config = outputConf.OutputConfigGNNDSE()
-            self.kernel_data = partial(KernelDataGNNDSE, base_path="../../vast")
+            self.kernel_data = partial(KernelDataGNNDSE, base_path=f"{self.inputs_folder}/vast")
             self.apply_directives = apply_merlin_directives
 
     def run_cpu_thread(self, kernel_data, base_data_id, thread_id):
         try:
             # each thread processes integer multiples of the the thread ID
             for i in range(thread_id, kernel_data.get_num_values(), self.num_processes):
+                
+                if self.no_regen:
+                    if os.path.exists(f"{self.output_dir}/data_{base_data_id + i}.pt"):
+                        continue
+
                 # generate .cpp file of kernel with pragmas
                 pragmadFile = f"{self.temp_dir}/{thread_id}.cpp"
-
-
 
                 kernel_data.use_output_graphs = True
                 self.apply_directives(kernel_data, i, pragmadFile)
@@ -277,11 +306,11 @@ class DatasetGenerator():
                 use_in_loss_mask = self.output_config.get_use_in_loss(i, kernel_data)
 
                 # run graph compiler on cpp file
-                # full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {self.output_config_name.value}"
-                full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {self.output_config_name.value} --graphType 0"
-                # full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {self.output_config_name} --graph_type 0"
-                
+                output_config_value = self.get_output_config_value(self.output_config_name)
 
+                full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {output_config_value} --graphType 0"
+
+                
                 graphOutput = subprocess.run(full_invocation, shell=True, capture_output=True, text=True)
 
                 # parse graph compiler graph output to pgv
@@ -295,25 +324,31 @@ class DatasetGenerator():
                 bb_id_list = graphToData.make_bb_id_list(graph)
 
                 cfg = graphToData.make_cfg_from_graph(graph)
+                cfg1 = cfg
+
+                graph1 = graph
+                graph2 = None
 
                 #####################
                 #  Duplication
                 #####################
 
-                duplicate = True
 
-                if duplicate and self.is_vast_config:
+                if (not self.merlin_only) and self.is_vast_config:
 
                     kernel_data.use_output_graphs = False
                     self.apply_directives(kernel_data, i, pragmadFile)
 
+                    output_config_value = self.get_output_config_value(self.output_config_name)
+
                     # run graph compiler on cpp file                
-                    full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {self.output_config_name.value} --graphType 1"
-                    # full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {self.output_config_name} --graph_type 1"
+                    full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {output_config_value} --graphType 1"
+
                     graphOutput = subprocess.run(full_invocation, shell=True, capture_output=True, text=True)
 
                     # parse graph compiler graph output to pgv
                     graph = pgv.AGraph(string=graphOutput.stdout)
+                    graph2 = graph
 
                     # process pgv graph representation to pytorch geometric representation 
                     node_array_small, edge_index_small, edge_attr_small = graphToData.make_graph_arrays(self.graph_encoders, graph)
@@ -354,6 +389,7 @@ class DatasetGenerator():
                 # once to the version-specialized MLP and once to the all-vast MLP
                 # if self.combine_vast and self.is_vast_config:
                 #     output_array = torch.concat([output_array, output_array], dim=1)
+                
                 
                 real_output_array = torch.zeros(self.output_length)
                 real_output_array[mask[0]] = output_array
@@ -422,10 +458,16 @@ class DatasetGenerator():
                             all_outputs = self.all_outputs,
                             shift = shift,
                             join_shift = join_shift,
-                            use_in_loss_mask = real_use_in_loss_mask
+                            use_in_loss_mask = real_use_in_loss_mask,
+                            # graph1 = str(graph1),
+                            # graph2 = str(graph2)
                             )
+
+
+                
                             
                 torch.save(data, f"{self.output_dir}/data_{base_data_id + i}.pt")
+                # print(base_data_id + i)
         except Exception as e:
             modified_exception = ValueError(f"There was an error in {kernel_data.kernel_name} {i}: {e}")
             raise modified_exception from e 
@@ -440,21 +482,33 @@ class DatasetGenerator():
             else:
                 for _ in self.outputs[key]:
                     mask.append(self.is_vast_config)
-        mask = torch.tensor([mask])
+        mask = torch.tensor([mask], dtype=torch.bool)
         return mask
+
+    def get_output_config_value(self, output_config_name):
+        if not self.all_vast_21:
+            return output_config_name.value
+        else:
+            return OutputConfigNames.VAST_21.value
 
         
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate a dataset of graphs for GNN QoR Estimation")
 
+    parser.add_argument('--dataset_folder', help='Folder to store dataset in.')
+    parser.add_argument('--graph_compiler', help='Location of graph compiler binary')
+    parser.add_argument('--inputs_folder', help='Location of input folder holding c++ files')
+
+
+
     parser.add_argument('--graph_config_mayo', action='store_true', help='Run with graph config mayo.')
     parser.add_argument('--graph_config_galway', action='store_true', help='Run with graph config galway (reduced graph, absorbed pragmas).')
     parser.add_argument('--graph_config_cavan', action='store_true', help='Run with graph config cavan (reduced graph but with pragma nodes).')
     parser.add_argument('--graph_config_louth', action='store_true', help='Run with graph config louth (reduced graph, pragmas absorbed, pipelined unroll).')
     parser.add_argument('--graph_config_kerry', action='store_true', help='Run with graph config kerry (same as galway but without one-hot-encoding types).')
-    parser.add_argument('--graph_config_cork', action='store_true', help='Run with graph config cork (kerry + pipelined unroll.')
-    parser.add_argument('--graph_config_limerick', action='store_true', help='Run with graph config cork (kerry + tripcount.')
+    parser.add_argument('--graph_config_cork', action='store_true', help='Run with graph config cork (kerry + pipelined unroll.)')
+    parser.add_argument('--graph_config_limerick', action='store_true', help='Run with graph config limerick (kerry + tripcount.)')
 
 
     parser.add_argument('--kernels_red', action='store_true', help='Run with kernel group red (all machsuite kernels).')
@@ -472,11 +526,20 @@ if __name__ == "__main__":
     parser.add_argument("--kernels_silver", action='store_true', help='Run with kernel group silver (all from v20 with input graphs)).')
     parser.add_argument("--kernels_platinum", action='store_true', help='Run with kernel group platinum (all from v18 with input graphs)).')
 
+    parser.add_argument("--kernels_crystal", action='store_true', help='To optimize for stage 2 from v18 with input graphs.')
+
+
+
 
     parser.add_argument("--combine_vast", action='store_true', help='Generate outputs that are trained on all VAST datasets, regardless of version')
+    parser.add_argument("--all_vast_21", action='store_true', help='Label all vast outputs as vast 21')
+    parser.add_argument("--merlin_only", action='store_true', help='Use only the post-merlin compiler graph representations for vast')
+    parser.add_argument("--valid_only", action='store_true', help='Generate only valid designs for vast for regression estimation')
+    parser.add_argument("--no_regen", action='store_true', help="Don't generate existing files")
 
 
-    parser.add_argument("--top_name", required=True, help='Top level folder name in datasets')
+
+    parser.add_argument("--output_folder", required=True, help='Output folder name in datasets')
 
 
     args = parser.parse_args()
@@ -525,9 +588,11 @@ if __name__ == "__main__":
         kernelList.append(KernelList.SILVER)
     if args.kernels_platinum:
         kernelList.append(KernelList.PLATINUM)
+    if args.kernels_crystal:
+        kernelList.append(KernelList.CRYSTAL)
 
     assert(graph_config_name is not None)
     assert(len(kernelList) > 0)
 
-    generator = DatasetGenerator(args.top_name, graph_config_name, kernelList, args.combine_vast)
+    generator = DatasetGenerator(args.dataset_folder, args.graph_compiler, args.inputs_folder, args.output_folder, graph_config_name, kernelList, args.combine_vast, args.all_vast_21, args.merlin_only, args.valid_only, args.no_regen)
     generator.generateData()
