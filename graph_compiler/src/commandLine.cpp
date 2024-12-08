@@ -35,6 +35,23 @@ void addTopArg(Sawyer::CommandLine::SwitchGroup &inputArgGroup) {
     inputArgGroup.insert(top);
 }
 
+void addOutputFolderArg(Sawyer::CommandLine::SwitchGroup &inputArgGroup) {
+    using namespace Sawyer::CommandLine;
+
+    // create top arg
+    Switch outputFolder = Switch("outputFolder");
+
+    // specify that the outputFolder arg takes a string as argument
+    // argument name is "functionName" in the man page
+    outputFolder.argument("outputFolder", anyParser());
+
+    // specify arg description in man page
+    outputFolder.doc("Specify the output folder to store output dot and pdf files. Defauts to outputs/");
+
+    // register arg
+    inputArgGroup.insert(outputFolder);
+}
+
 void addSrcArg(Sawyer::CommandLine::SwitchGroup &inputArgGroup) {
     using namespace Sawyer::CommandLine;
 
@@ -95,6 +112,9 @@ Sawyer::CommandLine::SwitchGroup specifyInputArgs() {
     addHelpArg(inputArgGroup);
     addTopArg(inputArgGroup);
     addSrcArg(inputArgGroup);
+
+    addOutputFolderArg(inputArgGroup);
+
     addDatasetIndexArg(inputArgGroup);
     addGraphTypeArg(inputArgGroup);
 
@@ -193,5 +213,13 @@ std::string getTopLevelFunctionName(Sawyer::CommandLine::ParserResult parserResu
     }
     return parserResult.parsed("top").back().asString();
 }
+
+std::string getOutputsFolder(Sawyer::CommandLine::ParserResult parserResult) {
+    if (!parserResult.have("outputFolder")) {
+        return "outputs/";
+    }
+    return parserResult.parsed("outputFolder").back().asString();
+}
+
 } // namespace CommandLine
 } // namespace Balor

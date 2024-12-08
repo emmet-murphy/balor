@@ -40,11 +40,13 @@ int main(int argc, char *argv[]) {
     bool makePdf = parserResult.have(Balor::MAKE_PDF);
     bool makeDot = parserResult.have(Balor::MAKE_DOT);
 
+    std::string outputFolder = Balor::CommandLine::getOutputsFolder(parserResult);
+
     Balor::GraphGenerator graphGen = Balor::GraphGenerator(parserResult);
     graphGen.generateGraph(topLevelFunctionDef);
 
     if (makePdf || makeDot) {
-        std::string fileName = "outputs/" + topLevelFunctionName;
+        std::string fileName = outputFolder + topLevelFunctionName;
 
         std::ofstream out(fileName + ".dot");
         std::streambuf *coutbuf = std::cout.rdbuf(); // save old buf

@@ -20,6 +20,10 @@ std::vector<std::string> getFrontendArgs(Sawyer::CommandLine::ParserResult parse
 
 // Extract the "top" argument, the top level function of the kernel
 std::string getTopLevelFunctionName(Sawyer::CommandLine::ParserResult parserResult);
+
+// Extract where to save output files to
+std::string getOutputsFolder(Sawyer::CommandLine::ParserResult parserResult);
+
 } // namespace CommandLine
 } // namespace Balor
 
