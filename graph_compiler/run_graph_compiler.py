@@ -32,10 +32,13 @@ def compile_graph(mode, src, top, make_pdf, generalize_types):
     result = subprocess.run(command, capture_output=True, text=True)
 
     print(" ".join(command))
+
+    if result.stderr:
+       print(result.stderr)
+
     # Print the output
     print(result.stdout)
-    if result.stderr:
-        print(result.stderr)
+
 
 def main():
     parser = argparse.ArgumentParser(description="Graph Compiler Script")
