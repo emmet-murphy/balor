@@ -35,7 +35,6 @@ void PragmaParser::parsePragmas(SgBasicBlock *bb) {
     PipelinedType pipelinedType = PipelinedType::NOT;
 
     for (SgNode *pragmaNode : pragmas) {
-        std::cerr << pragmaNode->unparseToString() << std::endl;
         // cast to SgPragma to get access to member variables
         SgPragma *pragma = isSgPragmaDeclaration(pragmaNode)->get_pragma();
 
@@ -183,8 +182,6 @@ void PragmaParser::parsePragmas(SgBasicBlock *bb) {
             }
         }
     }
-
-    std::cerr << "finished pragmas" << std::endl;
 
     unrollHierarchy.moveDown(unrollFactor);
     tripcountHierarchy.moveDown(tripcount);

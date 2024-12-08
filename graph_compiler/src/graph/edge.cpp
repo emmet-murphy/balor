@@ -512,15 +512,11 @@ void FunctionStartEdge::runDeferred() {
 // or connect mem elements in simple way
 void FunctionCallEdge::run() {
     if (!Edges::graphGenerator->checkArg(INLINE_FUNCTIONS)) {
-
-        std::cerr << "function call edge" << std::endl;
-
         Edges::graphGenerator->stateNode = funcCallNode;
 
         int parameterEdgeID = 0;
         // for each parameter
         for (SgExpression *expr : parameters) {
-            std::cerr << expr->unparseToString() << std::endl;
             // get the original param type
             SgInitializedName *originalParam = funcDec->get_parameterList()->get_args()[parameterEdgeID];
             SgType *paramType = originalParam->get_type();
@@ -629,21 +625,13 @@ void FunctionCallEdge::run() {
             // be calling read expression
             Edges::graphGenerator->derefTracker->makeNewDerefMap();
             if (!foundException) {
-                std::cerr << "not an exception" << std::endl;
 
                 Node *parameterRead = Edges::graphGenerator->astParser->readExpression(expr);
-
-                std::cerr << "parameter read" << std::endl;
-
-                std::cerr << "printing nodes" << std::endl;
                 //clone 
                 std::vector<Node *> nodesFrozen = Edges::graphGenerator->nodes;
                 for (Node *node : nodesFrozen) {
                     node->print();
                 }
-
-                std::cerr << "printing edges" << std::endl;
-
 
                 //clone 
                 std::vector<Edge *> edgesFrozen = Edges::graphGenerator->edges;
@@ -651,16 +639,12 @@ void FunctionCallEdge::run() {
                     edge->run();
                 }
 
-                std::cerr << "make implicit cast dataflow edge" << std::endl;
-
                 Edge *edge = new ImplicitCastDataFlowEdge(parameterRead, funcCallNode, paramTypeDependency);
                 edge->order = parameterEdgeID;
                 edge->run();
                 parameterEdgeID++;
             }
         }
-
-        std::cerr << "params complete" << std::endl;
 
         // now actually execute the function call
         (new ControlFlowEdge(funcCallNode))->run();

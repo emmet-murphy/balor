@@ -49,7 +49,6 @@ void AstParser::handleBB(std::vector<SgStatement *> statements) {
         if (SgPragmaDeclaration *pragmaDec = isSgPragmaDeclaration(statement)) {
             continue;
         }
-        std::cerr << statement->unparseToString() << std::endl;
 
         // if the line of code is 1 or more variable declarations
         if (SgVariableDeclaration *varDecStatement = isSgVariableDeclaration(statement)) {
@@ -445,7 +444,6 @@ Node *AstParser::handleFunctionCall(SgFunctionCallExp *funcCall) {
 // Expressions are deeply nested, with each expression having other expressions
 // as operands it is dependant on.
 Node *AstParser::readExpression(SgExpression *expr) {
-    std::cerr << expr->unparseToString() << std::endl;
     // if the expression is an assignment operator
     if (SgAssignOp *assignOp = isSgAssignOp(expr)) {
         // handle the rhs of the assignment
@@ -667,7 +665,6 @@ Node *AstParser::readExpression(SgExpression *expr) {
         int value = 8;
         if (input){
             while (!found) {
-                std::cerr << input->unparseToString() << std::endl;
                 if (auto varRef = isSgVarRefExp(input)) {
                     found = true;
                 } else if (auto dotExpr = isSgDotExp(input)) {
@@ -1308,8 +1305,6 @@ void AstParser::parseAst(SgFunctionDefinition *topLevelFuncDef) {
         SgFunctionDeclaration *funcDec = functionDecsNeeded.front();
         functionDecsNeeded.pop();
 
-        std::cerr << funcDec->unparseToString() << std::endl;
-
         //set default, this will be overridden later if true
         graphGenerator->setFuncInlined(funcDec, false);
 
@@ -1333,9 +1328,6 @@ void AstParser::parseAst(SgFunctionDefinition *topLevelFuncDef) {
         functionReturnEdgeMap[funcDec] = functionReturnEdge;
     }
 
-    std::cerr << "all non-inline functions processed" << std::endl;
-
-
     pragmaParser->parseInlinePragmas(functionDecsComplete);
 
     while (!pragmaParser->inlinedFunctions.empty()) {
@@ -1358,8 +1350,6 @@ void AstParser::parseAst(SgFunctionDefinition *topLevelFuncDef) {
         }
     }
 
-    std::cerr << "inline labelling complete" << std::endl;
-
 
     graphGenerator->registerCalls(topLevelFuncDec, 1);
     for(SgFunctionDeclaration *funcDec : functionDecsComplete){
@@ -1367,7 +1357,6 @@ void AstParser::parseAst(SgFunctionDefinition *topLevelFuncDef) {
             graphGenerator->registerCalls(funcDec, funcCall->unrollFactor.full);
         }
     }    
-    std::cerr << "register calls" << std::endl;
 
 }
 

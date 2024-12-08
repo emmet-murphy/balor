@@ -35,7 +35,6 @@ bool GraphGenerator::checkArg(const std::string &arg) {
 
 // Print a dot file description of the graph to the terminal
 void GraphGenerator::printGraph() {
-    std::cerr << "printing graph" << std::endl;
     // make a directed graph
     std::cout << "digraph {" << std::endl;
     std::cout << "newrank=\"true\";" << std::endl;
@@ -46,16 +45,10 @@ void GraphGenerator::printGraph() {
     Nodes::resetNodeID();
     // for each node
     for (Node *node : nodesFrozen) {
-        std::cerr << "node" << std::endl;
-
         node->print();
     }
-    std::cerr << "nodes done" << std::endl;
     std::vector<Edge *> edgesFrozen = edges;
     for (Edge *edge : edgesFrozen) {
-        std::cerr << edge->toString() << std::endl;
-        std::cerr << "edge" << std::endl;
-
         edge->run();
     }
     // close the directed graph
