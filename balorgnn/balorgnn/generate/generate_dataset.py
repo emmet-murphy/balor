@@ -26,6 +26,8 @@ from collections import defaultdict
 
 import torch
 
+from tqdm import tqdm
+
 from balorgnn.generate.output_config import OutputConfigNames
 
 class KernelList(Enum):
@@ -51,9 +53,18 @@ class GraphConfigNames(Enum):
     LIMERICK = 6
 
 
+def progress_bar(progress, total_tasks):
+    with tqdm(total=total_tasks) as pbar:
+        while progress.value < total_tasks:
+            time.sleep(0.1)  # Update every 100ms
+            pbar.n = progress.value
+            pbar.refresh()
+        pbar.n = total_tasks
+        pbar.refresh()
+
 class DatasetGenerator():
     def __init__(self, dataset_folder, graph_compiler, inputs_folder, output_folder, graph_config_name, kernel_list, combine_vast, all_vast_21, merlin_only, valid_only, no_regen):
-        self.num_processes = 16
+        self.num_processes = 6
         
         self.inputs_folder = inputs_folder
 
@@ -100,7 +111,8 @@ class DatasetGenerator():
 
 
         if KernelList.RED in kernel_list:
-            red_kernel_list = ["gemm","bfs","update","hist","init","sum_scan","last_step_scan","fft","local_scan","md_kernel","twiddles8","get_oracle_activations1","get_oracle_activations2","matrix_vector_product_with_bias_input_layer","stencil3d","ellpack","bbgemm","viterbi","aes_shiftRows","ms_mergesort","merge","add_bias_to_activations","aes256_encrypt_ecb","aes_expandEncKey","ss_sort","stencil","soft_max","take_difference","matrix_vector_product_with_bias_output_layer","update_weights","backprop","aes_addRoundKey","aes_addRoundKey_cpy","aes_mixColumns","aes_subBytes","matrix_vector_product_with_bias_second_layer"]
+            # red_kernel_list = ["gemm","bfs","update","hist","init","sum_scan","last_step_scan","fft","local_scan","md_kernel","twiddles8","get_oracle_activations1","get_oracle_activations2","matrix_vector_product_with_bias_input_layer","stencil3d","ellpack","bbgemm","viterbi","aes_shiftRows","ms_mergesort","merge","add_bias_to_activations","aes256_encrypt_ecb","aes_expandEncKey","ss_sort","stencil","soft_max","take_difference","matrix_vector_product_with_bias_output_layer","update_weights","backprop","aes_addRoundKey","aes_addRoundKey_cpy","aes_mixColumns","aes_subBytes","matrix_vector_product_with_bias_second_layer"]
+            red_kernel_list = ["gemm"]
 
             self.kernels[OutputConfigNames.DB4HLS].extend(red_kernel_list)
             self.outputs[OutputConfigNames.DB4HLS] = outputConf.OutputConfigDB4HLS().metrics
@@ -196,6 +208,7 @@ class DatasetGenerator():
 
         for output_config_name in self.kernels:
             self.set_output_config(output_config_name)
+            manager = multiprocessing.Manager()
             for kernel_num, kernel in enumerate(self.kernels[output_config_name]):
 
 
@@ -211,8 +224,14 @@ class DatasetGenerator():
 
                 a = time.time()
 
+                progress = manager.Value('i', 0)  # Shared integer for progress
+
+                progress_process = multiprocessing.Process(target=progress_bar, args=(progress, len(kernel_data.data)))
+
+                progress_process.start()
+
                 with multiprocessing.Pool(processes=self.num_processes) as pool:
-                    input = [(kernel_data, base_data_id, i) for i in range(self.num_processes)]
+                    input = [(kernel_data, base_data_id, progress, i) for i in range(self.num_processes)]
                     out = pool.starmap_async(self.run_cpu_thread, input, error_callback=DatasetGenerator.custom_error_callback)
 
                     # Close the pool to prevent any more tasks from being submitted
@@ -287,7 +306,7 @@ class DatasetGenerator():
             self.kernel_data = partial(KernelDataGNNDSE, base_path=f"{self.inputs_folder}/vast")
             self.apply_directives = apply_merlin_directives
 
-    def run_cpu_thread(self, kernel_data, base_data_id, thread_id):
+    def run_cpu_thread(self, kernel_data, base_data_id, progress, thread_id):
         try:
             # each thread processes integer multiples of the the thread ID
             for i in range(thread_id, kernel_data.get_num_values(), self.num_processes):
@@ -309,7 +328,6 @@ class DatasetGenerator():
                 output_config_value = self.get_output_config_value(self.output_config_name)
 
                 full_invocation = self.invocation + f" --top {kernel_data.kernel_name} --src {pragmadFile} --datasetIndex {output_config_value} --graphType 0"
-
                 
                 graphOutput = subprocess.run(full_invocation, shell=True, capture_output=True, text=True)
 
@@ -463,10 +481,12 @@ class DatasetGenerator():
                             # graph2 = str(graph2)
                             )
 
-
-                
                             
                 torch.save(data, f"{self.output_dir}/data_{base_data_id + i}.pt")
+
+                progress.value += 1
+
+
                 # print(base_data_id + i)
         except Exception as e:
             modified_exception = ValueError(f"There was an error in {kernel_data.kernel_name} {i}: {e}")
