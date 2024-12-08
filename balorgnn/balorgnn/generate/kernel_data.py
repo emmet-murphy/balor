@@ -250,7 +250,12 @@ class KernelDataVast(KernelData):
         else:
             print("Unrecognized vast output config")
             quit()
-        with open(f"{base_path}/designs/{self.folder}/{kernel_name}.json", 'r') as file:
+
+        config_file = f"{base_path}/designs/{self.folder}/{kernel_name}.json"
+        if not os.path.isfile(config_file):
+            self.data = pd.DataFrame()
+            return
+        with open(config_file, 'r') as file:
             data = json.load(file)
 
         pragmas = [data[key]['point'] for key in data]
@@ -308,16 +313,18 @@ class KernelDataVastCustom(KernelDataVast):
     def __init__(self, kernel_name, base_path, output_config_name):
         self.raw_kernel_name = kernel_name
         self.use_output_graphs = True
+        self.base_path = base_path
         super().__init__(kernel_name, base_path, output_config_name)
         self.data['original_index'] = self.data.index    
-        self.data = self.data[[os.path.exists(f"../../vast/translate/output_sources_{self.folder}/{self.raw_kernel_name}/{i}.cpp") for i in range(len(self.data))]]
+
+        self.data = self.data[[os.path.exists(f"{base_path}/translate/output_sources_{self.folder}/{self.raw_kernel_name}/{i}.cpp") for i in range(len(self.data))]]
 
     def get_pragmas(self, i):
         if self.use_output_graphs:
             index = self.data["original_index"].iloc[i]
-            self.input_file = f"../../vast/translate/output_sources_{self.folder}/{self.raw_kernel_name}/{index}.cpp"
+            self.input_file = f"{self.base_path}/translate/output_sources_{self.folder}/{self.raw_kernel_name}/{index}.cpp"
         else:
-            self.input_file = f"../../vast/sources/{self.raw_kernel_name}.c"
+            self.input_file = f"{self.base_path}/sources/{self.raw_kernel_name}.c"
 
         return self.data["pragmas"].iloc[i]
     
