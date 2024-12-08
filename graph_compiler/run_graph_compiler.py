@@ -1,9 +1,12 @@
 import argparse
 import subprocess
+import os
 
-def compile_graph(mode, src, top, make_pdf, generalize_types):
+def compile_graph(mode, src, top, make_pdf, generalize_types, outputFolder):
     # Base command
     command = ["./bin/graph_compiler", "--src", src, "--top", top, "--datasetIndex", "NA", "--graphType", "NA"]
+
+    command += ["--outputFolder", outputFolder]
 
     if make_pdf:
         command += ["--make_pdf"]
@@ -27,6 +30,7 @@ def compile_graph(mode, src, top, make_pdf, generalize_types):
     else:
         raise ValueError(f"Unknown mode: {mode}")
 
+    os.makedirs(outputFolder, exist_ok=True)
 
     # Run the command
     result = subprocess.run(command, capture_output=True, text=True)
@@ -54,10 +58,13 @@ def main():
     parser.add_argument("--make_pdf", action="store_true", help="Print pdf in output folder")
     parser.add_argument("--generalize_types", action="store_true", help="Output characteristics of types rather than one-hot-encoding them")
     
+    parser.add_argument("--outputFolder", help="Path to the output folder", default="outputs/")
+
+
     args = parser.parse_args()
 
     # Call the compile function with the parsed arguments
-    compile_graph(args.mode, args.src, args.top, args.make_pdf, args.generalize_types)
+    compile_graph(args.mode, args.src, args.top, args.make_pdf, args.generalize_types, args.outputFolder)
 
 if __name__ == "__main__":
     main()
