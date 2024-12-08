@@ -42,7 +42,7 @@ void addOutputFolderArg(Sawyer::CommandLine::SwitchGroup &inputArgGroup) {
     Switch outputFolder = Switch("outputFolder");
 
     // specify that the outputFolder arg takes a string as argument
-    // argument name is "functionName" in the man page
+    // argument name is "outputFolder" in the man page
     outputFolder.argument("outputFolder", anyParser());
 
     // specify arg description in man page
@@ -215,10 +215,18 @@ std::string getTopLevelFunctionName(Sawyer::CommandLine::ParserResult parserResu
 }
 
 std::string getOutputsFolder(Sawyer::CommandLine::ParserResult parserResult) {
+
     if (!parserResult.have("outputFolder")) {
         return "outputs/";
     }
-    return parserResult.parsed("outputFolder").back().asString();
+
+    std::string folder = parserResult.parsed("outputFolder").back().asString();
+
+    if (!folder.empty() && folder.back() != '/') {
+        folder += '/';
+    }
+
+    return folder;
 }
 
 } // namespace CommandLine
