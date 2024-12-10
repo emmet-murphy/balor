@@ -1,7 +1,7 @@
 # Balor
 
 
-This is the codebase for my ICCAD'24 publication "Balor: HLS Source Code Evaluator Based on Custom Graphs and Hierarchical GNNs". Balor was designed to facilitate design space exploration for high-level synthesis, using graph neural networks to estimate the Quality of Results quickly and accurately.
+This is the codebase for my ICCAD'24 publication ["Balor: HLS Source Code Evaluator Based on Custom Graphs and Hierarchical GNNs"](https://dynamo.ethz.ch/wp-content/uploads/sites/22/2024/11/Murphy_ICCAD24_Balor_HLS_Evaluator_GNN.pdf). Balor was designed to facilitate design space exploration for high-level synthesis, using graph neural networks to estimate the Quality of Results quickly and accurately.
 
 Winner of stage 1 of [ML Contest for Chip Design with HLS](https://www.kaggle.com/competitions/machine-learning-contest-for-high-level-synthesis/leaderboard), hosted by UCLA Vast lab, UCLA DM lab, and AMD.
 
