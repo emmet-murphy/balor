@@ -32,6 +32,14 @@ DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
 # Main target
 all: $(EXECUTABLE)
 
+# Ensure that subdirectories exist
+$(shell mkdir -p $(BUILD_DIR))
+$(shell mkdir -p $(addprefix $(BUILD_DIR)/,$(SUB_DIRS)))
+$(shell mkdir -p $(DEPDIR))
+$(shell mkdir -p $(addprefix $(DEPDIR)/,$(SUB_DIRS)))
+
+$(shell mkdir -p $(BIN_DIR))
+
 # Rule for linking object files and creating executable
 $(EXECUTABLE): $(OBJS)
 	$(ROSE_CXX) $(ROSE_CXXFLAGS) -o $@ $^ $(ROSE_LDFLAGS) $(ROSE_LINK_RPATHS) -Wl,-rpath=$(ROSE_HOME)/lib
@@ -39,12 +47,6 @@ $(EXECUTABLE): $(OBJS)
 # Rule for compiling individual source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR) $(DEPDIR)
 	$(ROSE_CXX) $(ROSE_CPPFLAGS) $(ROSE_CXXFLAGS) $(DEPFLAGS) -c $< -o $@
-
-# Ensure that subdirectories exist
-$(shell mkdir -p $(BUILD_DIR))
-$(shell mkdir -p $(addprefix $(BUILD_DIR)/,$(SUB_DIRS)))
-$(shell mkdir -p $(DEPDIR))
-$(shell mkdir -p $(addprefix $(DEPDIR)/,$(SUB_DIRS)))
 
 # Clean rule to remove generated files
 clean:
