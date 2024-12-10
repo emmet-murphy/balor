@@ -7,6 +7,22 @@ Winner of stage 1 of [ML Contest for Chip Design with HLS](https://www.kaggle.co
 
 Our evaluate functions in run.py generate detailed reports on estimation error across the 6 metrics: LUTs, FFs, Latency, Clock Period, DSPs and BRAMs. The pre-generated sample report "db4hls_pretrained_report.pdf" is available with error statistics, scatter plots, error histograms and numerical cdfs.
 
+### Docker 
+
+A [docker image](https://hub.docker.com/r/emmetmurphy/balor/tags) can be used to download a pre-built copy of Balor.
+
+An example script of using the image to generate a graph representation of a input file is:
+
+```
+docker run --rm \
+-v ~/balor_docker/2mm.cpp:/root/2mm.cpp \
+-v ~/balor_docker/outputs:/root/output/ \
+-w /root/balor/graph_compiler \
+emmetmurphy/balor:latest \
+python /root/balor/graph_compiler/run_graph_compiler.py --make_pdf --generalize_types --mode opt --src /root/2mm.cpp --top kernel_2mm --outputFolder /root/output/
+```
+
+An important note is the c++ files in balorgnn/inputs/machsuite cannot be used as is, as Balor does not (currently) support loop labels.
 
 ### Using Balor
 
@@ -48,5 +64,3 @@ The train/train.py script trains the GNN encoders and estimators, and performs i
 The "graph_compiler" folder contains all of the code for converting c++ code to graph representations, encoded them in the DOT graph description language from the Graphviz project. To compile it, you will need to first build [ROSE](https://github.com/rose-compiler/rose) [0.11.145.3](https://github.com/rose-compiler/rose/commit/102bc598b74b00a657510f763dabbfb18ed8bdb9) with [Boost](https://www.boost.org/) 1.67.0.
 
 Once built, the wrapper script run_graph_compiler.py allows quick use of the compiler without specifying individual settings.
-
-We are planning to provide a VM with the graph compiler pre-built for those who would like to experiment with it, and it will be available shortly.
