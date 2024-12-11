@@ -16,4 +16,4 @@ First replace CHOOSE_ROSE_INSTALLATION_LOCATION with your desired installation l
 
 Run
 `make -j16` 
-in balor/graph_compiler.
+in the graph_compiler folder.
