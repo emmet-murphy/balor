@@ -30,10 +30,9 @@ The run.py script allows easy execution of  Balor's graph compiler, as well as b
 
 #### quickstart.py
 
-"--download_dataset" downloads >37,000 db4hls designs pre-encoded and ready for training, and places them in "balorgnn/datasets/db4hls_download/"
+"--download_dataset" downloads >37,000 [DB4HLS](https://www.db4hls.inf.usi.ch/) designs pre-encoded and ready for training, and places them in "balorgnn/datasets/db4hls_download/"
 
-"--download_pretrained" downloads our model weights from epoch 580 of training, along with the validation and test results to allow our generalized scripts to select the correct model weights. These files are put in "balorgnn/outputs/model_weights/db4hls_pretrained/limerick/snake/0/" and "balorgnn/outputs/results/db4hls_pretrained/limerick/snake/0/" respectively. None of our open-sourced scripts actually read in these model weights, the evaluate functions directly reads the test set results, but these will be provided shortly.
-
+"--download_pretrained" downloads our model weights from epoch 580 of training, along with the validation and test results. These files are put in "balorgnn/outputs/model_weights/db4hls_pretrained/limerick/snake/0/" and "balorgnn/outputs/results/db4hls_pretrained/limerick/snake/0/" respectively. However, none of our open-sourced scripts actually use these model weights, as our evaluation scripts use the inference results generated during training.
 
 
 ### Methodology
@@ -55,12 +54,12 @@ Balorgnn is built to work as a local python library, and so contains a setup.py 
 pip install -e .
 ```
 
-The generate/generate_dataset.py script converts c++ files to pytorch geometric .pth files, with support for 4 different datasets. (TODO: Individual instructions for each dataset)
+The generate/generate_dataset.py script converts c++ files to pytorch geometric .pth files, with support for 4 different datasets. Currently we are only releasing the files required to use Balor with the [DB4HLS](https://www.db4hls.inf.usi.ch/) data, while we work on a journal extension detailing our methods for the [ML Contest for Chip Design with HLS](https://www.kaggle.com/competitions/machine-learning-contest-for-high-level-synthesis/leaderboard).
 
 The train/train.py script trains the GNN encoders and estimators, and performs inference on a validate and test set every 10 epochs.
 
 ### Graph Compiler
 
-The "graph_compiler" folder contains all of the code for converting c++ code to graph representations, encoded them in the DOT graph description language from the Graphviz project. To compile it, you will need to first build [ROSE](https://github.com/rose-compiler/rose) [0.11.145.3](https://github.com/rose-compiler/rose/commit/102bc598b74b00a657510f763dabbfb18ed8bdb9) with [Boost](https://www.boost.org/) 1.67.0.
+The "graph_compiler" folder contains all of the code for converting c++ code to graph representations, encoded them in the DOT graph description language from the Graphviz project. To compile it, you will need to first build [ROSE](https://github.com/rose-compiler/rose) [0.11.145.3](https://github.com/rose-compiler/rose/commit/102bc598b74b00a657510f763dabbfb18ed8bdb9) with [Boost](https://www.boost.org/) 1.67.0. Helpful scripts are available in graph_compiler/build_scripts
 
 Once built, the wrapper script run_graph_compiler.py allows quick use of the compiler without specifying individual settings.
