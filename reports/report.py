@@ -244,8 +244,8 @@ def make_pdf(report_name, output_folder, epoch):
         plt.title(f"Percent Error Histogram: Real {metric} vs. Inferred {metric}")
         # plt.title(f"Real {metric} vs. Inferred {metric}")
 
-        plt.xlabel(f"Real {metric}")
-        plt.ylabel(f"Inferred {metric}")
+        plt.ylabel(f"Normalized Frequency")
+        plt.xlabel(f"Percent Error")
 
         plt.xlim([0, 15])
 
@@ -300,8 +300,8 @@ def make_pdf(report_name, output_folder, epoch):
         plt.title(f"Percent Error Numerical CDF: Real {metric} vs. Inferred {metric}")
         # plt.title(f"Real {metric} vs. Inferred {metric}")
 
-        plt.xlabel(f"Real {metric}")
-        plt.ylabel(f"Inferred {metric}")
+        plt.xlabel(f"Percent Error")
+        plt.ylabel(f"Numerical CDF")
 
         plt.xlim([0, 30])
 
