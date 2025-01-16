@@ -111,8 +111,7 @@ class DatasetGenerator():
 
 
         if KernelList.RED in kernel_list:
-            # red_kernel_list = ["gemm","bfs","update","hist","init","sum_scan","last_step_scan","fft","local_scan","md_kernel","twiddles8","get_oracle_activations1","get_oracle_activations2","matrix_vector_product_with_bias_input_layer","stencil3d","ellpack","bbgemm","viterbi","aes_shiftRows","ms_mergesort","merge","add_bias_to_activations","aes256_encrypt_ecb","aes_expandEncKey","ss_sort","stencil","soft_max","take_difference","matrix_vector_product_with_bias_output_layer","update_weights","backprop","aes_addRoundKey","aes_addRoundKey_cpy","aes_mixColumns","aes_subBytes","matrix_vector_product_with_bias_second_layer"]
-            red_kernel_list = ["gemm"]
+            red_kernel_list = ["gemm","bfs","update","hist","init","sum_scan","last_step_scan","fft","local_scan","md_kernel","twiddles8","get_oracle_activations1","get_oracle_activations2","matrix_vector_product_with_bias_input_layer","stencil3d","ellpack","bbgemm","viterbi","aes_shiftRows","ms_mergesort","merge","add_bias_to_activations","aes256_encrypt_ecb","aes_expandEncKey","ss_sort","stencil","soft_max","take_difference","matrix_vector_product_with_bias_output_layer","update_weights","backprop","aes_addRoundKey","aes_addRoundKey_cpy","aes_mixColumns","aes_subBytes","matrix_vector_product_with_bias_second_layer"]
 
             self.kernels[OutputConfigNames.DB4HLS].extend(red_kernel_list)
             self.outputs[OutputConfigNames.DB4HLS] = outputConf.OutputConfigDB4HLS().metrics
@@ -239,6 +238,11 @@ class DatasetGenerator():
                     out.wait()
                     # Join the worker processes to clean up resources
                     pool.join()
+
+                    # updating the progress value seems to not be foolproof
+                    # so once every thread is finished, set the progress bar to 100%
+                    progress.value = len(kernel_data.data)
+                    progress_process.join()
 
                 base_data_id = base_data_id + kernel_data.get_num_values()
                 b = time.time()
